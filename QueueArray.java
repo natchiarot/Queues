@@ -10,7 +10,7 @@ public class QueueArray {
     private int backOfQueue;
     private int nItems;
     int beginningOfQueue;
-    private Map<String, LocalDateTime> arrivalTimes;  // Using a map to store each animals arrival date.
+    private Map<LocalDateTime, String> arrivalTimes;  // Using a map to store each animals arrival datetime.
 
     public QueueArray(int size) {
         this.arr = new String[size];
@@ -35,7 +35,7 @@ public class QueueArray {
        return (nItems == 0);
     }
 
-    //Enqueue - add to back of queue.
+    //Enqueue
     public void enQueue (String value){
         if (isFull()){
             System.out.println("The Queue is Full");
@@ -56,11 +56,10 @@ public class QueueArray {
         // Made the decision to make this do the exact time it was added so that it would go
         // along with the rules of a queue.
         LocalDateTime arrivalTime = LocalDateTime.now();
-        System.out.println(arrivalTime);
-        arrivalTimes.put(value, arrivalTime);
+        arrivalTimes.put(arrivalTime, value);
     }
 
-    //deQueue - remove from front of queue.
+    //deQueue
     public String deQueueAny(){
         if (isEmpty()){
             System.out.println("The queue is empty");
@@ -68,63 +67,136 @@ public class QueueArray {
         } else {
             LocalDateTime earliest = null;
             String result = null;
+            boolean validEntry = false;
 
-            for (Entry<String, LocalDateTime> entry : arrivalTimes.entrySet()) {
-                if (earliest == null || entry.getValue().isBefore(earliest)) {
-                    earliest = entry.getValue();
-                    result = entry.getKey();
+            for (Entry<LocalDateTime, String> entry : arrivalTimes.entrySet()) {
+                if (!entry.getValue().equals("Dog") && !entry.getValue().equals("Cat")) {
+                    System.out.println("Value(s) that have been entered are neither Dogs nor Cats");
+                    break;
+                }
+                validEntry = true;
+                if (earliest == null || entry.getKey().isBefore(earliest)) {
+                    earliest = entry.getKey();
+                    result = entry.getValue();
                 }
             }
-            System.out.println(earliest + result);
-            arrivalTimes.remove(result);
-            beginningOfQueue++;
-            if (beginningOfQueue > backOfQueue){
-                beginningOfQueue = backOfQueue = -1;
+
+            if (validEntry) {
+                for (int i = beginningOfQueue; i <= backOfQueue; i++) {
+                    if (arr[i].equals(result)) {
+                        arr[i] = null;
+                        break;
+                    }
+                }
+
+                arrivalTimes.remove(earliest);
+                beginningOfQueue++;
+                if (beginningOfQueue > backOfQueue) {
+                    beginningOfQueue = backOfQueue = -1;
+                }
+                nItems--;
             }
-            nItems--;
+            if (validEntry) {
+                System.out.println("DeQueueAny: Successfully adopted " + result + " " + earliest);
+            }
             return result;
         }
     }
 
-    public String deQueueDog(String value){
+    public String deQueueDog(){
         if (isEmpty()){
             System.out.println("The queue is empty");
             return null;
         } else {
-//            String result = arr[beginningOfQueue];
+            LocalDateTime earliestTime = null;
+            String earliestDog = null;
+
+            for (Entry<LocalDateTime, String> entry : arrivalTimes.entrySet()) {
+                if (entry.getValue().equals("Dog")) {
+                    if (earliestTime == null || entry.getKey().isBefore(earliestTime)) {
+                        earliestTime = entry.getKey();
+                        earliestDog = entry.getValue();
+                    }
+                }
+            }
+
+            if (earliestDog != null) {
+                for (int i = beginningOfQueue; i <= backOfQueue; i++) {
+                    if (arr[i].equals(earliestDog)) {
+                        arr[i] = null;
+                        break;
+                    }
+                }
+            }
+
+            arrivalTimes.remove(earliestTime);
             beginningOfQueue++;
             if (beginningOfQueue > backOfQueue){
                 beginningOfQueue = backOfQueue = -1;
             }
             nItems--;
-            return value;
+            if (earliestDog != null) {
+                System.out.println("Successfully adopted " + earliestDog + " " + earliestTime);
+            } else {
+                System.out.println("No cats available for adoption.");
+            }
+            return earliestDog;
         }
     }
 
-    public String deQueueCat(String value){
+    public String deQueueCat(){
         if (isEmpty()){
             System.out.println("The queue is empty");
             return null;
         } else {
-            String result = arr[beginningOfQueue];
-            arrivalTimes.remove(result);
+            LocalDateTime earliestTime = null;
+            String earliestCat = null;
+
+            for (Entry<LocalDateTime, String> entry : arrivalTimes.entrySet()) {
+                if (entry.getValue().equals("Cat")) {
+                    if (earliestTime == null || entry.getKey().isBefore(earliestTime)) {
+                        earliestTime = entry.getKey();
+                        earliestCat = entry.getValue();
+                    }
+                }
+            }
+
+            if (earliestCat != null) {
+                for (int i = beginningOfQueue; i <= backOfQueue; i++) {
+                    if (arr[i].equals(earliestCat)) {
+                        arr[i] = null;
+                        break;
+                    }
+                }
+            }
+
+            arrivalTimes.remove(earliestTime);
             beginningOfQueue++;
             if (beginningOfQueue > backOfQueue){
                 beginningOfQueue = backOfQueue = -1;
             }
             nItems--;
-            return result;
+            if (earliestCat != null) {
+            System.out.println("Successfully adopted " + earliestCat + " " + earliestTime);
+            } else {
+                System.out.println("No cats available for adoption.");
+            }
+            return earliestCat;
         }
-    }
-
-    public LocalDateTime getArrivalTime(String value) {
-        return arrivalTimes.get(value);
     }
 
     // Peek
     public String peek(){
         if (!isEmpty()){
-            return arr[beginningOfQueue];
+            LocalDateTime earliest = null;
+            String value = arr[beginningOfQueue];
+            for (Entry<LocalDateTime, String> entry : arrivalTimes.entrySet()) {
+                if (entry.getValue().equals(value)) {
+                    earliest = entry.getKey();
+                }
+            }
+            return "Peek: " + value + " " + earliest;
+
 
         } else {
             System.out.println("The Queue is empty");
@@ -135,17 +207,21 @@ public class QueueArray {
     //delete
     public void deleteQueue(){
         arr = null;
-//        arrivalTimes.clear();
+        backOfQueue = -1;
+        beginningOfQueue = -1;
+        nItems = 0;
+        arrivalTimes.clear();
         System.out.println("The queue is successfully deleted");
     }
 
     @Override
     public String toString() {
-        return "backOfQueue=" + backOfQueue +
+        return "QueueArray{" +
+                "arr=" + Arrays.toString(arr) +
+                ", backOfQueue=" + backOfQueue +
                 ", nItems=" + nItems +
                 ", beginningOfQueue=" + beginningOfQueue +
                 ", arrivalTimes=" + arrivalTimes +
                 '}';
     }
-
 }
